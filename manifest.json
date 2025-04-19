@@ -1,15 +1,15 @@
 {
     "manifest_version": 3,
-    "name": "YouTube Helper",
+    "name": "Soccer Highlights Analyzer",
     "version": "1.0",
-    "description": "Shows a popup when watching YouTube videos",
-    "permissions": ["activeTab", "tabs"],
-    "host_permissions": ["*://*.youtube.com/*"],
+    "description": "Identifies soccer highlights and extracts goal timestamps",
+    "permissions": ["activeTab", "tabs", "clipboardWrite", "storage"],
+    "host_permissions": ["*://*.youtube.com/*", "https://generativelanguage.googleapis.com/*"],
     "background": {
         "service_worker": "background.js"
     },
     "action": {
-        "default_title": "YouTube Helper",
+        "default_title": "Soccer Highlights Analyzer",
         "default_popup": "popup.html"
     },
     "content_scripts": [
@@ -19,4 +19,3 @@
         }
     ]
 }
-
