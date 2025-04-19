@@ -1,0 +1,22 @@
+{
+    "manifest_version": 3,
+    "name": "YouTube Helper",
+    "version": "1.0",
+    "description": "Shows a popup when watching YouTube videos",
+    "permissions": ["activeTab", "tabs"],
+    "host_permissions": ["*://*.youtube.com/*"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_title": "YouTube Helper",
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["content.js"]
+        }
+    ]
+}
+
