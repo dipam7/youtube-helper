@@ -1,10 +1,9 @@
-<!-- popup.html -->
 <!DOCTYPE html>
 <html>
 <head>
     <style>
         body {
-            width: 250px;
+            width: 350px;
             padding: 10px;
             font-family: Arial, sans-serif;
         }
@@ -13,32 +12,53 @@
             padding: 10px;
             background-color: #f8f8f8;
             border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
         }
         #not-youtube {
             color: #cc0000;
         }
+        .info-label {
+            font-weight: bold;
+            margin-top: 8px;
+            display: block;
+        }
         button {
-            margin-top: 10px;
-            padding: 5px 10px;
+            margin-top: 15px;
+            padding: 8px 12px;
             background-color: #cc0000;
             color: white;
             border: none;
             border-radius: 3px;
             cursor: pointer;
+            width: 100%;
         }
         button:hover {
             background-color: #990000;
         }
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
-    <h3>YouTube Helper</h3>
+    <h3>Soccer Highlights Analyzer</h3>
     <div id="not-youtube" style="display: none;">
         Not on YouTube! Open a YouTube video first.
     </div>
     <div id="video-info" class="video-info" style="display: none;">
-        <div id="video-title">Loading video info...</div>
-        <button id="copy-title">Copy Title</button>
+        <div class="info-label">Title:</div>
+        <div id="video-title">Loading...</div>
+        
+        <div class="info-label">Duration:</div>
+        <div id="video-duration">Loading...</div>
+        
+        <div class="info-label">Description:</div>
+        <div id="video-description" style="max-height: 100px; overflow-y: auto;">Loading...</div>
+        
+        <button id="analyze-button">Analyze Soccer Highlights</button>
+        <div id="status" class="status"></div>
     </div>
     <script src="popup.js"></script>
 </body>

@@ -9,23 +9,43 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('not-youtube').style.display = 'none';
             document.getElementById('video-info').style.display = 'block';
             
-            // Get video title from the page
+            // Request video info from content script
             chrome.tabs.sendMessage(currentTab.id, {action: "getVideoInfo"}, function(response) {
-                if (response && response.title) {
+                if (response) {
+                    // Update UI with video information
                     document.getElementById('video-title').textContent = response.title;
+                    document.getElementById('video-duration').textContent = response.duration + 
+                        ` (${response.durationMinutes} minutes)`;
+                    document.getElementById('video-description').textContent = response.description;
+                    
+                    // Store response for later use
+                    window.videoData = response;
+                    
+                    // Enable/disable the analyze button based on video duration
+                    const analyzeButton = document.getElementById('analyze-button');
+                    if (response.durationMinutes > 20) {
+                        analyzeButton.textContent = "Video too long (>20 min)";
+                        analyzeButton.disabled = true;
+                    } else {
+                        analyzeButton.textContent = "Analyze Soccer Highlights";
+                        analyzeButton.disabled = false;
+                    }
                 } else {
                     document.getElementById('video-title').textContent = "Couldn't get video info";
+                    document.getElementById('video-duration').textContent = "Unknown";
+                    document.getElementById('video-description').textContent = "Not available";
                 }
             });
             
-            // Set up copy button
-            document.getElementById('copy-title').addEventListener('click', function() {
-                const titleText = document.getElementById('video-title').textContent;
-                navigator.clipboard.writeText(titleText);
-                this.textContent = "Copied!";
-                setTimeout(() => {
-                    this.textContent = "Copy Title";
-                }, 1500);
+            // Set up analyze button
+            document.getElementById('analyze-button').addEventListener('click', function() {
+                if (!window.videoData) return;
+                
+                document.getElementById('status').textContent = "Analyzing video...";
+                
+                // This is a placeholder for the Gemini API call
+                // We'll implement this in the next step
+                document.getElementById('status').textContent = "Gemini API not implemented yet";
             });
         } else {
             document.getElementById('not-youtube').style.display = 'block';
