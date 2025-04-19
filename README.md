@@ -2,6 +2,8 @@
 
 > A Chrome extension that identifies soccer highlight videos on YouTube and extracts goal timestamps.
 
+![some text](image.png)
+
 ## Current Status
 
 This extension is currently under development. It can:
