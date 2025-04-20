@@ -15,7 +15,14 @@ This extension is currently under development. It can:
 
 2. Check if the video is under 20 minutes (to focus on highlight reels)
 
-3. Call the Gemini API to analyze if the content is likely a soccer highlights video
+3. Call the Claude API to analyze if the content is likely a soccer highlights video
+   - Uses a simple TRUE/FALSE prompt to classify video content
+   - Limits description text to first 500 characters for better API performance
+
+## In Progress
+
+- Secure API key storage implementation
+- Video transcript extraction
 
 ## Future Plans
 
@@ -24,7 +31,6 @@ This extension is currently under development. It can:
 - Format goal timestamps for easy sharing in comments
 - Copy formatted timestamps to clipboard
 - Add better error handling and user feedback
-- Implement secure API key storage
 - Support more languages and soccer terminology
 
 ## Installation
@@ -32,7 +38,7 @@ This extension is currently under development. It can:
 ### Prerequisites
 
 - Google Chrome browser
-- Gemini API key (get one at https://ai.google.dev/)
+- Claude API key (get one at https://console.anthropic.com/)
 
 ### Development Installation
 
@@ -55,13 +61,13 @@ This extension is currently under development. It can:
 2. Click the extension icon
 3. The extension will display the video title, duration, and description
 4. If the video is under 20 minutes, you can click "Analyze Soccer Highlights"
-5. The extension will use Gemini to determine if it's a soccer highlights video
+5. The extension will use Claude to determine if it's a soccer highlights video
 
 ## Implementation Details
 
 The extension consists of:
 
-- **manifest.json**: Extension configuration
+- **manifest.json**: Extension configuration with permissions for YouTube and Claude API
 - **popup.html/js**: UI that appears when clicking the extension icon
 - **content.js**: Script that extracts data from YouTube pages
 - **background.js**: Background service worker that handles events
@@ -75,17 +81,13 @@ Currently, the API key is hardcoded for testing purposes. This will be replaced 
 
 ### Video Classification
 
-The Gemini API is used to determine if a video is a soccer highlights video based on:
+The Claude API is used to determine if a video is a soccer highlights video based on:
 - Video title
-- Video description
-- Video duration
+- Video description (first 500 characters)
 
 ### Transcript Extraction (Planned)
 
-YouTube transcript extraction is challenging because:
-- Not all videos have transcripts
-- Transcript UI can change over time
-- Access methods are not officially documented
+YouTube transcript extraction is the next development goal.
 
 ## Contributing
 
