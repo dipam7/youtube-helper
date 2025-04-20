@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('status').textContent = "Analyzing video...";
                 
                 // Call the Gemini API to analyze if this is a soccer highlights video
-                analyzeVideoWithGemini(window.videoData);
+                analyzeVideoWithClaude(window.videoData);
             });
         } else {
             document.getElementById('not-youtube').style.display = 'block';
@@ -52,52 +52,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Function to call Gemini API for video analysis
-    function analyzeVideoWithGemini(videoData) {
-        // You would normally get this from storage, but since you have it in your environment
-        // For demo purposes, we'll hardcode this, but in a real extension you would store it securely
-        const apiKey = "GEMINI_API_KEY"; // Replace with actual key or use chrome.storage.sync to get it
+    function analyzeVideoWithClaude(videoData) {
+        // Update function name to reflect using Claude API
+        const apiKey = "CLAUDE_API_KEY";
         
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        // Claude API endpoint
+        const apiUrl = "https://api.anthropic.com/v1/messages";
         
         const prompt = `
             Analyze this YouTube video information and determine if it's a soccer highlights video.
             Only respond with "TRUE" or "FALSE".
             
             Title: ${videoData.title}
-            Duration: ${videoData.duration} (${videoData.durationMinutes} minutes)
-            Description: ${videoData.description}
+            Description: ${videoData.description.substring(0, 500)}${videoData.description.length > 500 ? '...' : ''}
             
             If you're confident this is a soccer highlights video, respond with "TRUE".
             Otherwise, respond with "FALSE".
         `;
         
-        // Make the API call
+        // Make the API call to Claude
         fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
             },
             body: JSON.stringify({
-                contents: [
+                model: "claude-3-haiku-20240307",
+                max_tokens: 100,
+                messages: [
                     {
-                        parts: [
-                            {
-                                text: prompt
-                            }
-                        ]
+                        "role": "user",
+                        "content": prompt
                     }
                 ]
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(`API returned ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
-            console.log("Gemini API response:", data);
+            console.log("Claude API response:", data);
             
             try {
-                // Extract the response text
-                const responseText = data.candidates[0].content.parts[0].text.trim();
-                console.log("Gemini response text:", responseText);
+                // Extract the response text from Claude's response format
+                const responseText = data.content[0].text;
+                console.log("Claude response text:", responseText);
                 
                 // Check if it's a soccer highlights video
                 if (responseText.includes("TRUE")) {
@@ -108,12 +115,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 document.getElementById('status').textContent = "Error analyzing video: " + error.message;
-                console.error("Error processing Gemini response:", error);
+                console.error("Error processing Claude response:", error);
             }
         })
         .catch(error => {
-            document.getElementById('status').textContent = "Error calling Gemini API: " + error.message;
-            console.error("Gemini API error:", error);
+            document.getElementById('status').textContent = "Error calling Claude API: " + error.message;
+            console.error("Claude API error:", error);
         });
     }
 });
