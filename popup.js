@@ -37,9 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Replace the existing click handler with this updated one in popup.js
+            // Set up analyze button (this is the primary click handler)
             document.getElementById('analyze-button').addEventListener('click', function() {
-                if  (!window.videoData) return;
+                if (!window.videoData) return;
     
                 document.getElementById('status').textContent = "Analyzing video...";
     
@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 analyzeVideoWithClaude(window.videoData)
                     .then(isSoccerVideo => {
                         if (isSoccerVideo) {
-                        // Then get the transcript
-                        getTranscript();
+                            // Then get the transcript
+                            getTranscript();
                         }
                     })
                     .catch(error => {
@@ -57,27 +57,32 @@ document.addEventListener('DOMContentLoaded', function() {
                         "Error during analysis: " + error.message;
                     });
             });
-            
-            // Set up analyze button
-            document.getElementById('analyze-button').addEventListener('click', function() {
-                if (!window.videoData) return;
-                
-                document.getElementById('status').textContent = "Analyzing video...";
-                
-                // Call the Gemini API to analyze if this is a soccer highlights video
-                analyzeVideoWithClaude(window.videoData);
-            });
         } else {
             document.getElementById('not-youtube').style.display = 'block';
             document.getElementById('video-info').style.display = 'none';
         }
     });
-    
-    // Change the existing analyzeVideoWithClaude function in popup.js
+});
+
+// Function to analyze video with Claude
 function analyzeVideoWithClaude(videoData) {
     return new Promise((resolve, reject) => {
         const apiKey = "CLAUDE_API_KEY";
         const apiUrl = "https://api.anthropic.com/v1/messages";
+        
+        // Create the prompt for Claude
+        // Limit description to 500 characters to avoid token limits
+        const limitedDescription = videoData.description.substring(0, 500);
+        
+        // Build the prompt for analyzing if this is a soccer highlights video
+        const prompt = `
+            Analyze this YouTube video information and respond with TRUE if it's a soccer/football highlights video, or FALSE if not.
+            Only respond with TRUE or FALSE.
+            
+            Video Title: ${videoData.title}
+            Video Duration: ${videoData.duration}
+            Video Description (partial): ${limitedDescription}
+        `;
         
         // Make the API call to Claude
         fetch(apiUrl, {
@@ -135,10 +140,9 @@ function analyzeVideoWithClaude(videoData) {
             reject(error); // Reject the promise
         });
     });
-    }
-});
+}
 
-// Add this new function after analyzeVideoWithClaude in popup.js
+// Function to get transcript
 function getTranscript() {
     document.getElementById('status').textContent = "Fetching transcript...";
     
