@@ -68,5 +68,97 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             url: window.location.href
         });
     }
+    else if (request.action === "getTranscript") {
+        const transcriptResult = getVideoTranscript();
+        
+        // Handle both sync and async results
+        if (transcriptResult instanceof Promise) {
+            transcriptResult.then(result => {
+                sendResponse(result);
+            });
+            return true; // Keep message channel open for async response
+        } else {
+            sendResponse(transcriptResult);
+        }
+    }
     return true; // Keeps the message channel open for async responses
 });
+
+// Add this function to content.js
+function getVideoTranscript() {
+    // YouTube stores transcripts in a specific panel
+    // First, check if transcript button exists and click it if needed
+    const transcriptButton = document.querySelector('button[aria-label="Show transcript"]');
+    
+    if (!transcriptButton) {
+        return { available: false, message: "No transcript button found" };
+    }
+    
+    // Click to open transcript panel if not already open
+    const transcriptPanel = document.querySelector('ytd-transcript-segment-list-renderer');
+    if (!transcriptPanel) {
+        transcriptButton.click();
+        // Need to wait for panel to load - returning promise for async handling
+        return new Promise((resolve) => {
+            // Wait for panel to appear in DOM
+            setTimeout(() => {
+                const segments = document.querySelectorAll('ytd-transcript-segment-renderer');
+                if (segments.length === 0) {
+                    resolve({ available: false, message: "No transcript segments found" });
+                    return;
+                }
+                
+                const transcript = extractTranscriptData(segments);
+                resolve({ available: true, transcript });
+            }, 1000); // Give time for transcript to load
+        });
+    } else {
+        // Panel already open, extract data
+        const segments = document.querySelectorAll('ytd-transcript-segment-renderer');
+        if (segments.length === 0) {
+            return { available: false, message: "No transcript segments found" };
+        }
+        
+        const transcript = extractTranscriptData(segments);
+        return { available: true, transcript };
+    }
+}
+
+// Helper function to extract text and timestamps
+function extractTranscriptData(segments) {
+    const transcriptData = [];
+    
+    segments.forEach(segment => {
+        const timeElement = segment.querySelector('.segment-timestamp');
+        const textElement = segment.querySelector('.segment-text');
+        
+        if (timeElement && textElement) {
+            const timestamp = timeElement.textContent.trim();
+            const text = textElement.textContent.trim();
+            
+            // Convert timestamp (e.g., "0:34") to seconds for easier analysis
+            const seconds = convertTimestampToSeconds(timestamp);
+            
+            transcriptData.push({
+                timestamp,
+                seconds,
+                text
+            });
+        }
+    });
+    
+    return transcriptData;
+}
+
+// Convert timestamp string to seconds
+function convertTimestampToSeconds(timestamp) {
+    const parts = timestamp.split(':').map(part => parseInt(part, 10));
+    
+    if (parts.length === 3) { // HH:MM:SS
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) { // MM:SS
+        return parts[0] * 60 + parts[1];
+    }
+    
+    return 0; // Default fallback
+}

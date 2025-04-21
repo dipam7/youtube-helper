@@ -36,6 +36,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('video-description').textContent = "Not available";
                 }
             });
+
+            // Replace the existing click handler with this updated one in popup.js
+            document.getElementById('analyze-button').addEventListener('click', function() {
+                if  (!window.videoData) return;
+    
+                document.getElementById('status').textContent = "Analyzing video...";
+    
+                // First check if it's a soccer video, then get transcript
+                analyzeVideoWithClaude(window.videoData)
+                    .then(isSoccerVideo => {
+                        if (isSoccerVideo) {
+                        // Then get the transcript
+                        getTranscript();
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error in analysis:", error);
+                        document.getElementById('status').textContent = 
+                        "Error during analysis: " + error.message;
+                    });
+            });
             
             // Set up analyze button
             document.getElementById('analyze-button').addEventListener('click', function() {
@@ -52,23 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    function analyzeVideoWithClaude(videoData) {
-        // Update function name to reflect using Claude API
+    // Change the existing analyzeVideoWithClaude function in popup.js
+function analyzeVideoWithClaude(videoData) {
+    return new Promise((resolve, reject) => {
         const apiKey = "CLAUDE_API_KEY";
-        
-        // Claude API endpoint
         const apiUrl = "https://api.anthropic.com/v1/messages";
-        
-        const prompt = `
-            Analyze this YouTube video information and determine if it's a soccer highlights video.
-            Only respond with "TRUE" or "FALSE".
-            
-            Title: ${videoData.title}
-            Description: ${videoData.description.substring(0, 500)}${videoData.description.length > 500 ? '...' : ''}
-            
-            If you're confident this is a soccer highlights video, respond with "TRUE".
-            Otherwise, respond with "FALSE".
-        `;
         
         // Make the API call to Claude
         fetch(apiUrl, {
@@ -108,19 +117,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Check if it's a soccer highlights video
                 if (responseText.includes("TRUE")) {
-                    document.getElementById('status').textContent = "This is a soccer highlights video! Analyzing for goal timestamps...";
-                    // In the next step, we'll add code to extract and analyze transcripts
+                    document.getElementById('status').textContent = "This is a soccer highlights video! Getting transcript...";
+                    resolve(true); // Resolve the promise as true
                 } else {
                     document.getElementById('status').textContent = "This doesn't appear to be a soccer highlights video.";
+                    resolve(false); // Resolve the promise as false
                 }
             } catch (error) {
                 document.getElementById('status').textContent = "Error analyzing video: " + error.message;
                 console.error("Error processing Claude response:", error);
+                reject(error); // Reject the promise
             }
         })
         .catch(error => {
             document.getElementById('status').textContent = "Error calling Claude API: " + error.message;
             console.error("Claude API error:", error);
+            reject(error); // Reject the promise
         });
+    });
     }
 });
+
+// Add this new function after analyzeVideoWithClaude in popup.js
+function getTranscript() {
+    document.getElementById('status').textContent = "Fetching transcript...";
+    
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {action: "getTranscript"}, function(response) {
+            if (response && response.available) {
+                document.getElementById('status').textContent = 
+                    `Found transcript with ${response.transcript.length} segments!`;
+                
+                // Store transcript data for analysis
+                window.transcriptData = response.transcript;
+                
+                // Show success and maybe add a button to continue analysis
+                document.getElementById('status').textContent = 
+                    `Successfully extracted ${response.transcript.length} transcript segments.`;
+                
+                // Here you would call the next step function to analyze the transcript
+                // analyzeTranscriptForGoals(response.transcript);
+            } else {
+                const message = response ? response.message : "Error getting transcript";
+                document.getElementById('status').textContent = 
+                    `Transcript not available: ${message}`;
+            }
+        });
+    });
+}
